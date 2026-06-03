@@ -1,0 +1,28 @@
+diff --git a/src/app.module.ts b/src/app.module.ts
+index 2a6ef5c..28cedc6 100644
+--- a/src/app.module.ts
++++ b/src/app.module.ts
+@@ -1,9 +1,22 @@
+-import { Module } from '@nestjs/common';
++import { Module, ValidationPipe } from '@nestjs/common';
++import { APP_PIPE } from '@nestjs/core';
+ import { HealthModule } from './health/health.module';
+ import { CartModule } from './cart/cart.module';
+ import { CheckoutModule } from './checkout/checkout.module';
+ 
+ @Module({
+   imports: [HealthModule, CartModule, CheckoutModule],
++  providers: [
++    // Global input-validation guard. Registered here (not in main.ts) so it is
++    // active under e2e tests too. Bug branch `bug/missing-validation` removes it.
++    {
++      provide: APP_PIPE,
++      useValue: new ValidationPipe({
++        whitelist: true,
++        transform: true,
++        forbidNonWhitelisted: false,
++      }),
++    },
++  ],
+ })
+ export class AppModule {}

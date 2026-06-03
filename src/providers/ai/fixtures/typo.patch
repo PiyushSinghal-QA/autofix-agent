@@ -1,0 +1,13 @@
+diff --git a/src/checkout/checkout.service.ts b/src/checkout/checkout.service.ts
+index 63c9c4f..6f6ed65 100644
+--- a/src/checkout/checkout.service.ts
++++ b/src/checkout/checkout.service.ts
+@@ -48,7 +48,7 @@ export class CheckoutService {
+       tax,
+       total,
+       // [bug/typo] ships this key as `formatedTotal` → API consumers read undefined.
+-      formatedTotal: formatMoney(total),
++      formattedTotal: formatMoney(total),
+       status: 'confirmed',
+     };
+   }

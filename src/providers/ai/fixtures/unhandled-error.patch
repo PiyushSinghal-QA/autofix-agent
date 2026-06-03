@@ -1,0 +1,18 @@
+diff --git a/src/checkout/checkout.service.ts b/src/checkout/checkout.service.ts
+index 3a9776b..6f6ed65 100644
+--- a/src/checkout/checkout.service.ts
++++ b/src/checkout/checkout.service.ts
+@@ -31,7 +31,12 @@ export class CheckoutService {
+     );
+ 
+     // [bug/unhandled-error] removes this try/catch → a decline becomes a 500.
+-    const receipt = await this.payment.charge({ amount: total, customer: dto.customer });
++    let receipt;
++    try {
++      receipt = await this.payment.charge({ amount: total, customer: dto.customer });
++    } catch (err) {
++      throw new BadRequestException(`Payment failed: ${(err as Error).message}`);
++    }
+ 
+     return {
+       orderId: receipt.reference,

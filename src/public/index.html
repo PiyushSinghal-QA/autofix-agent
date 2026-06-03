@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AutoFix AI</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <h1>AutoFix<span class="accent"> AI</span></h1>
+          <p class="tagline">bug&nbsp;→&nbsp;Trello&nbsp;card&nbsp;→&nbsp;AI&nbsp;fix&nbsp;→&nbsp;GitHub&nbsp;PR</p>
+        </div>
+      </div>
+      <div class="chips" id="configChips"></div>
+    </header>
+
+    <!-- Health overview -->
+    <section class="health" id="health">
+      <div class="health-main">
+        <div class="health-badge" id="healthBadge">—</div>
+        <div class="health-meta">
+          <div class="health-title" id="healthRepo">checkout-service</div>
+          <div class="health-sub" id="healthSub">loading health…</div>
+        </div>
+      </div>
+      <div class="health-stats" id="healthStats"></div>
+      <div class="health-sev" id="healthSev"></div>
+      <div class="health-baseline">
+        <button id="scanBtn" class="ghost-btn">Run baseline check</button>
+        <div class="baseline-result" id="baselineResult"></div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <!-- Left: seeded bugs -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Seeded bugs</h2>
+          <div class="toggles">
+            <label class="toggle" title="Make the AI attempt a test-editing fix, to demo the safety guard">
+              <input type="checkbox" id="rogueToggle" /> <span>rogue</span>
+            </label>
+            <label class="toggle" title="Skip the review step and open the PR automatically">
+              <input type="checkbox" id="autoApprove" /> <span>auto-approve</span>
+            </label>
+          </div>
+        </div>
+        <div id="bugList" class="bug-list"><div class="loading">Loading bugs…</div></div>
+
+        <div class="panel-head sub"><h2>Recent runs</h2></div>
+        <div id="history" class="history"><div class="muted">No runs yet.</div></div>
+      </section>
+
+      <!-- Right: live pipeline -->
+      <section class="panel pipeline">
+        <div class="panel-head">
+          <h2>Pipeline</h2>
+          <div id="jobBanner" class="job-banner idle">Idle</div>
+        </div>
+
+        <div id="empty" class="empty">
+          <div class="empty-art" aria-hidden="true"></div>
+          <p>Pick a bug on the left and hit <b>Trigger AutoFix</b> to watch the agent detect, branch, fix, validate and propose a PR — live.</p>
+        </div>
+
+        <ol id="timeline" class="timeline hidden"></ol>
+        <div id="reviewControls" class="review-controls hidden"></div>
+      </section>
+    </main>
+
+    <template id="stageTpl">
+      <li class="stage" data-stage="">
+        <div class="stage-rail"><span class="dot"></span></div>
+        <div class="stage-body">
+          <div class="stage-head">
+            <span class="stage-name"></span>
+            <span class="stage-time"></span>
+          </div>
+          <div class="stage-msg"></div>
+          <div class="stage-detail"></div>
+        </div>
+      </li>
+    </template>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

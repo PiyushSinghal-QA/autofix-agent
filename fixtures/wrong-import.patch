@@ -1,0 +1,12 @@
+diff --git a/src/pricing/pricing.service.ts b/src/pricing/pricing.service.ts
+index 8da1d8d..ac463a0 100644
+--- a/src/pricing/pricing.service.ts
++++ b/src/pricing/pricing.service.ts
+@@ -1,6 +1,6 @@
+ import { Injectable } from '@nestjs/common';
+ import { CartItem } from '../cart/cart.service';
+-import { calcTax } from './tax.legacy';
++import { calcTax } from './tax';
+ 
+ export interface PriceBreakdown {
+   subtotal: number;

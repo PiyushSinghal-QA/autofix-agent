@@ -1,0 +1,18 @@
+diff --git a/src/checkout/checkout.service.ts b/src/checkout/checkout.service.ts
+index 025a57f..6f6ed65 100644
+--- a/src/checkout/checkout.service.ts
++++ b/src/checkout/checkout.service.ts
+@@ -14,9 +14,12 @@ export class CheckoutService {
+   ) {}
+ 
+   async checkout(dto: CheckoutDto) {
+-    const cart = this.carts.find(dto.cartId)!;
++    const cart = this.carts.find(dto.cartId);
+ 
+     // [bug/null-check] removes this guard → `cart.items` below throws → 500.
++    if (!cart) {
++      throw new NotFoundException(`Cart ${dto.cartId} not found`);
++    }
+ 
+     if (cart.items.length === 0) {
+       throw new BadRequestException('Cannot check out an empty cart');

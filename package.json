@@ -1,0 +1,37 @@
+{
+  "name": "autofix-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AutoFix AI — detects failures via checkout-e2e, fixes checkout-service, opens GitHub PRs",
+  "scripts": {
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "lint": "eslint \"src/**/*.ts\"",
+    "demo": "npm run build && npm run start",
+    "pipeline": "ts-node src/cli/run-pipeline.ts",
+    "detect": "ts-node src/cli/detect.ts",
+    "seed:fixtures": "node scripts/seed-fixtures.mjs"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@octokit/rest": "^20.1.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "simple-git": "^3.25.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}
