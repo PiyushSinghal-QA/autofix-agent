@@ -24,6 +24,8 @@ export class AgentConfig {
   readonly appPort: number;
   readonly worktreeRoot: string;
   readonly appBinPath: string;
+  readonly commitAuthorName: string;
+  readonly commitAuthorEmail: string;
 
   readonly anthropicApiKey?: string;
   readonly anthropicModel: string;
@@ -41,6 +43,10 @@ export class AgentConfig {
     this.appPort = env.APP_PORT ? Number(env.APP_PORT) : 3100;
     this.worktreeRoot = join(this.appPath, '.agent-worktrees');
     this.appBinPath = join(this.appPath, 'node_modules', '.bin');
+    // The agent owns its commit identity so fixes are attributable and commits
+    // never fail on environments without an ambient git user (e.g. CI runners).
+    this.commitAuthorName = env.GIT_AUTHOR_NAME || 'AutoFix Agent';
+    this.commitAuthorEmail = env.GIT_AUTHOR_EMAIL || 'autofix-agent@users.noreply.github.com';
 
     this.anthropicApiKey = env.ANTHROPIC_API_KEY || undefined;
     this.anthropicModel = env.ANTHROPIC_MODEL || 'claude-opus-4-8';

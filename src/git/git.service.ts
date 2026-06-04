@@ -54,7 +54,14 @@ export class GitService {
   async commitAll(worktreePath: string, message: string): Promise<string> {
     const git = simpleGit(worktreePath);
     await git.add(['-A']);
-    await git.commit(message);
+    // Inject identity per-commit (-c) rather than relying on ambient git config,
+    // which is absent on CI runners ("Author identity unknown"). No config is
+    // persisted to the worktree, so repeated/concurrent runs stay clean.
+    await git.raw([
+      '-c', `user.name=${this.config.commitAuthorName}`,
+      '-c', `user.email=${this.config.commitAuthorEmail}`,
+      'commit', '-m', message,
+    ]);
     return (await git.revparse(['HEAD'])).trim();
   }
 
