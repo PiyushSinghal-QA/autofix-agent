@@ -30,11 +30,11 @@ const bugCards = {};
 async function init() {
   $('#scanBtn').addEventListener('click', scanBaseline);
   await loadConfig();
-  await loadBugs();
   await loadHealth();
+  await loadIssues();
   await loadHistory();
   await loadReport();
-  setInterval(loadReport, 4000); // reflect fresh pushes from checkout-e2e
+  setInterval(() => { loadReport(); loadIssues(); }, 4000); // reflect fresh pushes from checkout-e2e
 }
 
 async function loadReport() {
@@ -44,7 +44,7 @@ async function loadReport() {
     if (!r) { strip.classList.add('hidden'); return; }
     strip.classList.remove('hidden');
     const when = new Date(r.receivedAt).toLocaleTimeString();
-    $('#reportSub').textContent = `${r.suite} · ${r.passed}/${r.totalTests} passed · ${r.failed} failing · ${when}`;
+    $('#reportSub').textContent = `branch ${r.branch} · ${r.passed}/${r.totalTests} passed · ${r.failed} failing · ${when}`;
     $('#reportBugs').innerHTML = r.detected && r.detected.length
       ? r.detected.map((d) => `<span class="report-bug ${esc(d.severity)}">${esc(d.bugId)}<small>${esc(d.failingTest)}</small></span>`).join('')
       : (r.failed ? `<span class="muted">${(r.unmapped || []).length} failing test(s), none mapped to a known bug</span>` : `<span class="muted">all green — nothing to fix</span>`);
@@ -66,35 +66,45 @@ function chip(html, warn) {
   return el('span', 'chip' + (warn ? ' warn' : ''), `<span class="led"></span>${html}`);
 }
 
-async function loadBugs() {
+async function loadIssues() {
   const list = $('#bugList');
   try {
-    const bugs = await (await fetch('./api/bugs')).json();
+    const issues = await (await fetch('./api/issues')).json();
+    for (const k of Object.keys(bugCards)) delete bugCards[k];
+    if (!Array.isArray(issues) || !issues.length) {
+      list.innerHTML = '<div class="muted">No issues found yet — run <code>checkout-e2e</code> and it will push results here.</div>';
+      return;
+    }
     list.innerHTML = '';
-    for (const b of bugs) list.append(bugCard(b));
-  } catch (e) {
-    list.innerHTML = '<div class="muted">Failed to load bugs.</div>';
+    for (const it of issues) list.append(issueCard(it));
+    loadHealth(); // paints status pills (open / in review / fixed) onto the cards
+  } catch {
+    list.innerHTML = '<div class="muted">Failed to load issues.</div>';
   }
 }
 
-function bugCard(b) {
+function issueCard(b) {
+  const id = b.bugId || b.id;
   const card = el('div', 'bug');
-  card.dataset.bug = b.id;
+  card.dataset.bug = id;
   card.append(el('div', 'bug-top',
     `<span class="sev ${esc(b.severity)}">${esc(b.severity)}</span>` +
     `<span class="bug-title">${esc(b.title)}</span>` +
     `<span class="bug-status open" data-status>open</span>`));
+  const seen = b.runs
+    ? `<span class="seen">seen in <b>${esc(b.runs)}</b> run(s) · last ${esc(new Date(b.lastSeen).toLocaleTimeString())}</span>`
+    : '';
   card.append(el('div', 'bug-meta',
     `<span><code>${esc(b.category)}</code> · branch <code>${esc(b.branch)}</code></span>` +
-    `<span>files: <code>${esc((b.files || []).join(', '))}</code></span>` +
-    `<span>fails: <code>${esc(b.failingTest)}</code></span>`));
+    `<span>fails: <code>${esc(b.failingTest)}</code></span>` +
+    seen));
   const actions = el('div', 'bug-actions');
   const btn = el('button', 'trigger', 'Trigger AutoFix');
-  btn.dataset.bug = b.id;
-  btn.addEventListener('click', () => trigger(b.id));
+  btn.dataset.bug = id;
+  btn.addEventListener('click', () => trigger(id));
   actions.append(btn);
   card.append(actions);
-  bugCards[b.id] = card;
+  bugCards[id] = card;
   return card;
 }
 

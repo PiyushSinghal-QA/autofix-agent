@@ -25,6 +25,7 @@ export interface AnalysisReport {
   receivedAt: string;
   repository: string;
   suite: string;
+  branch: string;
   totalTests: number;
   passed: number;
   failed: number;
@@ -33,16 +34,30 @@ export interface AnalysisReport {
   summary: string;
 }
 
+/** A bug aggregated across every run that has reported it. */
+export interface IssueSummary {
+  bugId: string;
+  title: string;
+  severity: Severity;
+  category: string;
+  branch: string;
+  failingTest: string;
+  files: string[];
+  runs: number; // how many pushed runs flagged it
+  firstSeen: string;
+  lastSeen: string;
+}
+
 /**
  * Ingests results PUSHED by the checkout-e2e framework, maps each failing test
- * to a known bug, and produces a triage report the dashboard + operator act on.
- * (Detection now comes from the framework's push, not the agent running tests.)
+ * to a known bug, and produces (a) the latest triage report and (b) the
+ * cumulative list of issues found across all runs.
  */
 @Injectable()
 export class AnalysisService {
   private readonly logger = new Logger('Analysis');
   private latest: AnalysisReport | null = null;
-  private readonly history: AnalysisReport[] = [];
+  private readonly history: AnalysisReport[] = []; // newest-first
 
   constructor(private readonly registry: BugRegistryService) {}
 
@@ -72,6 +87,7 @@ export class AnalysisService {
       receivedAt: new Date().toISOString(),
       repository: input.repository || this.registry.repository,
       suite: input.suite || 'checkout-e2e',
+      branch: input.branch || (detected[0]?.branch ?? 'unknown'),
       totalTests: total,
       passed,
       failed,
@@ -86,7 +102,7 @@ export class AnalysisService {
 
     this.latest = report;
     this.history.unshift(report);
-    if (this.history.length > 20) this.history.pop();
+    if (this.history.length > 50) this.history.pop();
     this.printReport(report);
     return report;
   }
@@ -95,16 +111,33 @@ export class AnalysisService {
     return this.latest;
   }
 
-  listHistory(): AnalysisReport[] {
-    return this.history;
+  /** Distinct bugs found across every pushed run, with first/last seen + run count. */
+  issuesToDate(): IssueSummary[] {
+    const map = new Map<string, IssueSummary>();
+    for (const report of [...this.history].reverse()) {
+      // oldest → newest
+      for (const d of report.detected) {
+        const existing = map.get(d.bugId);
+        if (existing) {
+          existing.runs += 1;
+          existing.lastSeen = report.receivedAt;
+        } else {
+          map.set(d.bugId, {
+            bugId: d.bugId, title: d.title, severity: d.severity, category: d.category,
+            branch: d.branch, failingTest: d.failingTest, files: d.files,
+            runs: 1, firstSeen: report.receivedAt, lastSeen: report.receivedAt,
+          });
+        }
+      }
+    }
+    const order = { high: 0, medium: 1, low: 2 } as Record<Severity, number>;
+    return [...map.values()].sort((a, b) => order[a.severity] - order[b.severity]);
   }
 
   private printReport(r: AnalysisReport): void {
-    const rows = r.detected
-      .map((d) => `   • ${d.bugId.padEnd(20)} [${d.severity}]  ${d.failingTest}`)
-      .join('\n');
+    const rows = r.detected.map((d) => `   • ${d.bugId.padEnd(20)} [${d.severity}]  ${d.failingTest}`).join('\n');
     this.logger.log(
-      `\n── E2E triage report (${r.suite}) ───────────────────────────\n` +
+      `\n── E2E triage (${r.suite} @ ${r.branch}) ───────────────────────\n` +
         `   ${r.passed}/${r.totalTests} passed · ${r.failed} failing\n` +
         (rows ? rows + '\n' : '') +
         (r.unmapped.length ? `   unmapped: ${r.unmapped.join(', ')}\n` : '') +

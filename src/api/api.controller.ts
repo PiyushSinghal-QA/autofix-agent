@@ -49,6 +49,12 @@ export class ApiController {
     return this.analysis.getLatest();
   }
 
+  /** Cumulative list of issues found across all pushed runs. */
+  @Get('issues')
+  getIssues() {
+    return this.analysis.issuesToDate();
+  }
+
   @Get('bugs')
   listBugs() {
     return this.registry.list();
