@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AutoFix — Live Status</title>
+    <meta name="description" content="Read-only live status board for the AutoFix demo, sourced from the GitHub API." />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <h1>AutoFix<span class="accent"> Live</span></h1>
+          <p class="tagline">bug&nbsp;→&nbsp;test&nbsp;framework&nbsp;→&nbsp;AI&nbsp;fix&nbsp;→&nbsp;GitHub&nbsp;PR</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="updated" id="updated">—</span>
+        <button id="refreshBtn" class="ghost-btn">Refresh</button>
+      </div>
+    </header>
+
+    <div class="readonly-note">
+      <span class="led" aria-hidden="true"></span>
+      Read-only view · data pulled live from the GitHub REST API ·
+      <a id="repoLink" href="https://github.com/PiyushSinghal-QA/checkout-service" target="_blank" rel="noopener">PiyushSinghal-QA/checkout-service</a>
+    </div>
+
+    <div id="banner" class="banner hidden"></div>
+
+    <!-- Summary -->
+    <section class="summary" id="summary">
+      <div class="stat"><div class="stat-num" id="sBugs">—</div><div class="stat-lbl">Known defects</div></div>
+      <div class="stat"><div class="stat-num" id="sOpen">—</div><div class="stat-lbl">Open fix PRs</div></div>
+      <div class="stat"><div class="stat-num" id="sMerged">—</div><div class="stat-lbl">Fixes merged</div></div>
+      <div class="stat"><div class="stat-num" id="sRun">—</div><div class="stat-lbl">Last AutoFix run</div></div>
+    </section>
+
+    <main class="layout">
+      <!-- Left: defect catalogue with fix status -->
+      <section class="panel">
+        <div class="panel-head"><h2>Known defects</h2><span class="count" id="bugCount"></span></div>
+        <div id="bugList" class="bug-list"><div class="loading">Loading defects…</div></div>
+      </section>
+
+      <!-- Right: live GitHub activity -->
+      <section class="panel">
+        <div class="panel-head"><h2>Fix pull requests</h2><span class="count" id="prCount"></span></div>
+        <div id="prList" class="rows"><div class="loading">Loading pull requests…</div></div>
+
+        <div class="panel-head sub"><h2>Recent AutoFix runs</h2></div>
+        <div id="runList" class="rows"><div class="loading">Loading runs…</div></div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span>The three linked repositories:</span>
+      <a href="https://github.com/PiyushSinghal-QA/checkout-service" target="_blank" rel="noopener">checkout-service</a>
+      <a href="https://github.com/PiyushSinghal-QA/checkout-e2e" target="_blank" rel="noopener">checkout-e2e</a>
+      <a href="https://github.com/PiyushSinghal-QA/autofix-agent" target="_blank" rel="noopener">autofix-agent</a>
+    </footer>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
