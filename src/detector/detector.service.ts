@@ -1,55 +1,40 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { AgentConfig } from '../config/agent-config';
-import { GitService } from '../git/git.service';
+import { Injectable } from '@nestjs/common';
 import { BugRegistryEntry, BugRegistryService } from '../bugs/bug-registry.service';
-import { AppTester } from '../common/app-tester.service';
-import { tail } from '../common/util';
+import { AnalysisService } from '../analysis/analysis.service';
 import { Bug } from '../common/types';
 
 /**
- * Reproduces a bug by running the checkout-e2e suite against the app built from
- * the bug branch (in a throwaway worktree) and emits a structured Bug.
+ * Builds the structured Bug for a fix run. Detection itself now comes from the
+ * checkout-e2e framework's PUSHED results (see AnalysisService); here we just
+ * resolve the bug from the registry and attach context from the latest report.
  */
 @Injectable()
 export class DetectorService {
-  private readonly logger = new Logger(DetectorService.name);
-
   constructor(
-    private readonly config: AgentConfig,
-    private readonly git: GitService,
     private readonly registry: BugRegistryService,
-    private readonly tester: AppTester,
+    private readonly analysis: AnalysisService,
   ) {}
 
-  async detect(entry: BugRegistryEntry, jobId: string): Promise<Bug> {
-    const worktree = await this.git.addDetachedWorktree(entry.branch, jobId);
-    try {
-      const result = await this.tester.runSuite(worktree);
-      const failures = result.e2e.failures;
-      const matched = failures.find((f) => f === entry.failingTest) ?? failures[0] ?? entry.failingTest;
-      const logs = failures.length
-        ? `E2E failures: ${failures.join('; ')}\n\n${result.e2e.output}`
-        : result.e2e.output;
-      if (!failures.length) {
-        this.logger.warn(`Detector saw no e2e failure for ${entry.id}; falling back to registry data.`);
-      }
+  async detect(entry: BugRegistryEntry, _jobId: string): Promise<Bug> {
+    const report = this.analysis.getLatest();
+    const fromReport = report?.detected.find((d) => d.bugId === entry.id);
+    const logs = fromReport
+      ? `Reported by ${report?.suite} at ${report?.receivedAt}: "${entry.failingTest}" failing (${report?.failed}/${report?.totalTests} failed in that run).`
+      : `Resolved from the bug registry — no matching checkout-e2e push on record for "${entry.failingTest}".`;
 
-      return {
-        id: entry.id,
-        title: entry.title,
-        severity: entry.severity,
-        category: entry.category,
-        repository: this.registry.repository,
-        branch: entry.branch,
-        files: entry.files,
-        failingTest: matched,
-        testFile: entry.testFile,
-        description: entry.description,
-        logs: tail(logs, 30),
-        detectedAt: new Date().toISOString(),
-      };
-    } finally {
-      await this.git.removeWorktree(worktree);
-    }
+    return {
+      id: entry.id,
+      title: entry.title,
+      severity: entry.severity,
+      category: entry.category,
+      repository: this.registry.repository,
+      branch: entry.branch,
+      files: entry.files,
+      failingTest: entry.failingTest,
+      testFile: entry.testFile,
+      description: entry.description,
+      logs,
+      detectedAt: new Date().toISOString(),
+    };
   }
 }

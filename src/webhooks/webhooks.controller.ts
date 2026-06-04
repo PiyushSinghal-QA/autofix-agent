@@ -2,6 +2,7 @@ import { Body, Controller, Get, Head, Headers, HttpCode, Logger, Post } from '@n
 import { AgentConfig } from '../config/agent-config';
 import { BugRegistryService } from '../bugs/bug-registry.service';
 import { PipelineService } from '../pipeline/pipeline.service';
+import { AnalysisService, IncomingE2eResult } from '../analysis/analysis.service';
 
 /**
  * Trello → AutoFix trigger. In production, Trello POSTs here when a card moves to
@@ -16,6 +17,7 @@ export class WebhooksController {
     private readonly config: AgentConfig,
     private readonly registry: BugRegistryService,
     private readonly pipeline: PipelineService,
+    private readonly analysis: AnalysisService,
   ) {}
 
   // Trello validates a webhook by issuing HEAD/GET to the callback URL.
@@ -23,6 +25,15 @@ export class WebhooksController {
   @Head('trello')
   verify() {
     return { ok: true };
+  }
+
+  /** checkout-e2e pushes its run results here; the agent analyses them + reports. */
+  @Post('e2e')
+  @HttpCode(200)
+  ingestE2e(@Body() body: IncomingE2eResult) {
+    const report = this.analysis.ingest(body || ({ failures: [] } as IncomingE2eResult));
+    this.logger.log(`E2E results received from ${report.suite}: ${report.summary}`);
+    return report;
   }
 
   @Post('trello')

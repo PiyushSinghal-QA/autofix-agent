@@ -90,7 +90,7 @@ export class PipelineService {
 
     try {
       // 1) DETECT ───────────────────────────────────────────────────────────
-      this.emit(jobId, 'detected', 'start', `Running tests on ${entry.branch} to reproduce the bug`);
+      this.emit(jobId, 'detected', 'start', `Resolving "${entry.failingTest}" reported by checkout-e2e on ${entry.branch}`);
       const bug = await this.detector.detect(entry, jobId);
       job.bug = bug;
       this.emit(jobId, 'detected', 'success', `Reproduced failing test: "${bug.failingTest}"`, {

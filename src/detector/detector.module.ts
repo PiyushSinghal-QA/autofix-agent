@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DetectorService } from './detector.service';
-import { GitModule } from '../git/git.module';
 import { BugsModule } from '../bugs/bugs.module';
-import { AppTesterModule } from '../common/app-tester.module';
+import { AnalysisModule } from '../analysis/analysis.module';
 
 @Module({
-  imports: [GitModule, BugsModule, AppTesterModule],
+  imports: [BugsModule, AnalysisModule],
   providers: [DetectorService],
   exports: [DetectorService],
 })

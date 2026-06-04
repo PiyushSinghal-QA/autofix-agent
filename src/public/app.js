@@ -33,6 +33,22 @@ async function init() {
   await loadBugs();
   await loadHealth();
   await loadHistory();
+  await loadReport();
+  setInterval(loadReport, 4000); // reflect fresh pushes from checkout-e2e
+}
+
+async function loadReport() {
+  try {
+    const r = await (await fetch('./api/report')).json();
+    const strip = $('#reportStrip');
+    if (!r) { strip.classList.add('hidden'); return; }
+    strip.classList.remove('hidden');
+    const when = new Date(r.receivedAt).toLocaleTimeString();
+    $('#reportSub').textContent = `${r.suite} · ${r.passed}/${r.totalTests} passed · ${r.failed} failing · ${when}`;
+    $('#reportBugs').innerHTML = r.detected && r.detected.length
+      ? r.detected.map((d) => `<span class="report-bug ${esc(d.severity)}">${esc(d.bugId)}<small>${esc(d.failingTest)}</small></span>`).join('')
+      : (r.failed ? `<span class="muted">${(r.unmapped || []).length} failing test(s), none mapped to a known bug</span>` : `<span class="muted">all green — nothing to fix</span>`);
+  } catch { /* no report yet */ }
 }
 
 async function loadConfig() {

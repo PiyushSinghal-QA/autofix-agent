@@ -4,6 +4,7 @@ import { BugRegistryService } from '../bugs/bug-registry.service';
 import { JobStore } from '../pipeline/job-store.service';
 import { PipelineService } from '../pipeline/pipeline.service';
 import { HealthService } from '../health/health.service';
+import { AnalysisService } from '../analysis/analysis.service';
 
 interface TriggerBody {
   bugId: string;
@@ -19,6 +20,7 @@ export class ApiController {
     private readonly store: JobStore,
     private readonly pipeline: PipelineService,
     private readonly health: HealthService,
+    private readonly analysis: AnalysisService,
   ) {}
 
   @Get('config')
@@ -39,6 +41,12 @@ export class ApiController {
   @Post('health/scan')
   scanHealth() {
     return this.health.scanBaseline();
+  }
+
+  /** Latest triage report pushed by the checkout-e2e framework. */
+  @Get('report')
+  getReport() {
+    return this.analysis.getLatest();
   }
 
   @Get('bugs')
