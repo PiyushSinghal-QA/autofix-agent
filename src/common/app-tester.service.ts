@@ -90,7 +90,7 @@ export class AppTester {
   }
 
   private async runE2e(): Promise<E2eResult> {
-    const res = await runCommand('npx', ['playwright', 'test', 'tests/api.spec.ts', '--reporter=json'], this.config.e2ePath, {
+    const res = await runCommand('npx', ['playwright', 'test', '--reporter=json'], this.config.e2ePath, {
       timeoutMs: 120_000,
       prependPath: [join(this.config.e2ePath, 'node_modules', '.bin')],
       env: { BASE_URL: `http://localhost:${this.config.appPort}` },
