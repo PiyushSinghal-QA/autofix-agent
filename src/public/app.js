@@ -29,6 +29,7 @@ const bugCards = {};
 // ── Bootstrap ────────────────────────────────────────────────────────
 async function init() {
   $('#scanBtn').addEventListener('click', scanBaseline);
+  $('#clearIssues').addEventListener('click', clearIssues);
   await loadConfig();
   await loadHealth();
   await loadIssues();
@@ -64,6 +65,15 @@ async function loadConfig() {
 
 function chip(html, warn) {
   return el('span', 'chip' + (warn ? ' warn' : ''), `<span class="led"></span>${html}`);
+}
+
+async function clearIssues() {
+  const btn = $('#clearIssues');
+  if (btn) btn.disabled = true;
+  try { await fetch('./api/issues/clear', { method: 'POST' }); } catch { /* ignore */ }
+  await loadReport();
+  await loadIssues();
+  if (btn) btn.disabled = false;
 }
 
 async function loadIssues() {

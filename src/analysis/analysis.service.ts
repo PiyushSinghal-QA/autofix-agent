@@ -111,6 +111,13 @@ export class AnalysisService {
     return this.latest;
   }
 
+  /** Reset the ledger — clears the latest run and the cumulative history. */
+  clear(): void {
+    this.latest = null;
+    this.history.length = 0;
+    this.logger.log('E2E ledger cleared.');
+  }
+
   /** Distinct bugs found across every pushed run, with first/last seen + run count. */
   issuesToDate(): IssueSummary[] {
     const map = new Map<string, IssueSummary>();

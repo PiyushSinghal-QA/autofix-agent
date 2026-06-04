@@ -55,6 +55,12 @@ export class ApiController {
     return this.analysis.issuesToDate();
   }
 
+  @Post('issues/clear')
+  clearIssues() {
+    this.analysis.clear();
+    return { ok: true };
+  }
+
   @Get('bugs')
   listBugs() {
     return this.registry.list();
