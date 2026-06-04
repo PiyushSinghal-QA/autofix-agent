@@ -331,7 +331,8 @@ button.trigger:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(0
 .bug-status.open { color: var(--muted); background: var(--bg-2); border: 1px solid var(--line-soft); }
 .bug-status.in-progress { color: #cfe0ff; background: rgba(91, 140, 255, 0.14); }
 .bug-status.fix-proposed { color: #ffe2b0; background: rgba(210, 153, 34, 0.16); }
-.bug-status.fixed { color: #c7f5cf; background: rgba(63, 185, 80, 0.16); }
+.bug-status.pr-open { color: #d8c7ff; background: rgba(124, 92, 255, 0.18); }
+.bug-status.resolved { color: #c7f5cf; background: rgba(63, 185, 80, 0.16); }
 .bug-pr { font-size: 11.5px; }
 .bug-pr a { color: var(--accent); text-decoration: none; }
 .bug-pr a:hover { text-decoration: underline; }

@@ -3,9 +3,10 @@ import { BugRegistryService } from '../bugs/bug-registry.service';
 import { JobStore } from '../pipeline/job-store.service';
 import { GitService } from '../git/git.service';
 import { AppTester } from '../common/app-tester.service';
+import { AnalysisService } from '../analysis/analysis.service';
 import { Severity } from '../common/types';
 
-export type BugHealthStatus = 'open' | 'in-progress' | 'fix-proposed' | 'fixed';
+export type BugHealthStatus = 'open' | 'in-progress' | 'fix-proposed' | 'pr-open' | 'resolved';
 
 export interface BugHealth {
   id: string;
@@ -33,7 +34,8 @@ export interface HealthSnapshot {
   open: number;
   inProgress: number;
   proposed: number;
-  fixed: number;
+  prOpen: number;
+  resolved: number;
   score: number;
   status: 'healthy' | 'degraded' | 'critical' | 'recovering';
   bySeverity: { high: number; medium: number; low: number };
@@ -41,7 +43,12 @@ export interface HealthSnapshot {
   baseline?: BaselineScan;
 }
 
-/** Derives an at-a-glance health view from the bug catalogue + run history. */
+/**
+ * At-a-glance health. The FRAMEWORK is the source of truth for "resolved": a bug
+ * only counts resolved once a pushed run that exercised its branch comes back
+ * green (which also means it re-opens if it regresses). A merged-but-unverified
+ * PR shows as "pr-open", never "fixed".
+ */
 @Injectable()
 export class HealthService {
   private lastScan?: BaselineScan;
@@ -51,16 +58,24 @@ export class HealthService {
     private readonly store: JobStore,
     private readonly git: GitService,
     private readonly tester: AppTester,
+    private readonly analysis: AnalysisService,
   ) {}
 
   snapshot(): HealthSnapshot {
     const jobs = this.store.list();
     const bugs: BugHealth[] = this.registry.list().map((b) => {
       const job = jobs.find((j) => j.bugId === b.id);
-      let status: BugHealthStatus = 'open';
-      if (job?.status === 'succeeded') status = 'fixed';
-      else if (job?.status === 'awaiting-approval') status = 'fix-proposed';
+      const fwReport = this.analysis.latestReportForBranch(b.branch);
+      // The framework ran this branch and did NOT flag the bug → genuinely resolved.
+      const fwResolved = !!fwReport && !fwReport.detected.some((d) => d.bugId === b.id);
+
+      let status: BugHealthStatus;
+      if (fwResolved) status = 'resolved';
       else if (job?.status === 'running') status = 'in-progress';
+      else if (job?.status === 'awaiting-approval') status = 'fix-proposed';
+      else if (job?.status === 'succeeded') status = 'pr-open'; // PR opened, not yet verified by the framework
+      else status = 'open';
+
       return {
         id: b.id, title: b.title, severity: b.severity, category: b.category,
         branch: b.branch, failingTest: b.failingTest, status,
@@ -73,23 +88,24 @@ export class HealthService {
     const open = count('open');
     const inProgress = count('in-progress');
     const proposed = count('fix-proposed');
-    const fixed = count('fixed');
+    const prOpen = count('pr-open');
+    const resolved = count('resolved');
     const total = bugs.length;
 
-    const unresolved = bugs.filter((b) => b.status === 'open' || b.status === 'in-progress');
+    const active = bugs.filter((b) => b.status === 'open' || b.status === 'in-progress');
     const bySeverity = {
-      high: unresolved.filter((b) => b.severity === 'high').length,
-      medium: unresolved.filter((b) => b.severity === 'medium').length,
-      low: unresolved.filter((b) => b.severity === 'low').length,
+      high: active.filter((b) => b.severity === 'high').length,
+      medium: active.filter((b) => b.severity === 'medium').length,
+      low: active.filter((b) => b.severity === 'low').length,
     };
 
-    const score = total ? Math.round(((proposed + fixed) / total) * 100) : 100;
+    const score = total ? Math.round((resolved / total) * 100) : 100;
     let status: HealthSnapshot['status'];
-    if (open + inProgress === 0) status = proposed > 0 ? 'recovering' : 'healthy';
+    if (open + inProgress === 0) status = resolved === total ? 'healthy' : 'recovering';
     else if (bySeverity.high > 0) status = 'critical';
     else status = 'degraded';
 
-    return { repository: this.registry.repository, total, open, inProgress, proposed, fixed, score, status, bySeverity, bugs, baseline: this.lastScan };
+    return { repository: this.registry.repository, total, open, inProgress, proposed, prOpen, resolved, score, status, bySeverity, bugs, baseline: this.lastScan };
   }
 
   /** Builds main and runs the checkout-e2e suite against it to confirm the baseline is green. */

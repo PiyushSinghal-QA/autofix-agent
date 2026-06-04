@@ -51,6 +51,15 @@ export class PipelineService {
   /** Kicks off a pipeline run and returns immediately with the job id. */
   start(bugId: string, options: StartOptions = {}): { jobId: string } {
     const entry = this.registry.get(bugId); // throws on unknown id
+    // Don't open a second fix while one is already in flight for this bug.
+    const active = this.store.list().find(
+      (j) => j.bugId === entry.id && (j.status === 'running' || j.status === 'awaiting-approval'),
+    );
+    if (active) {
+      throw new BadRequestException(
+        `A fix for "${entry.id}" is already ${active.status} (job ${active.jobId}). Approve, discard, or let it finish first.`,
+      );
+    }
     const jobId = `job_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
     this.store.create(jobId, entry.id);
     this.settled.set(jobId, this.run(jobId, entry.id, options));

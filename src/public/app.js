@@ -119,7 +119,7 @@ function issueCard(b) {
 }
 
 // ── Health ───────────────────────────────────────────────────────────
-const STATUS_LABEL = { open: 'open', 'in-progress': 'fixing…', 'fix-proposed': 'in review', fixed: 'fixed' };
+const STATUS_LABEL = { open: 'open', 'in-progress': 'fixing…', 'fix-proposed': 'in review', 'pr-open': 'PR open', resolved: 'resolved' };
 
 async function loadHealth() {
   try {
@@ -135,9 +135,9 @@ function renderHealth(h) {
   badge.textContent = h.status;
   $('#healthRepo').textContent = h.repository;
   $('#healthSub').textContent =
-    `${h.open + h.inProgress} open · ${h.proposed} awaiting review · ${h.fixed} fixed · ${h.score}% resolved`;
+    `${h.open + h.inProgress} open · ${h.proposed} in review · ${h.prOpen} PR open · ${h.resolved} resolved`;
   $('#healthStats').innerHTML =
-    hstat(h.open + h.inProgress, 'open') + hstat(h.proposed, 'in review') + hstat(h.fixed, 'fixed');
+    hstat(h.open + h.inProgress, 'open') + hstat(h.prOpen, 'PR open') + hstat(h.resolved, 'resolved');
   $('#healthSev').innerHTML =
     sevchip('high', h.bySeverity.high) + sevchip('medium', h.bySeverity.medium) + sevchip('low', h.bySeverity.low);
   if (h.baseline) renderBaseline(h.baseline);
@@ -214,6 +214,14 @@ async function trigger(bugId) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bugId, rogue, autoApprove }),
     })).json();
+    if (!res.jobId) {
+      // e.g. duplicate-PR guard returned 400 with a message
+      setBanner('failed', res.message || 'Could not start a fix');
+      $('#timeline').classList.add('hidden');
+      $('#empty').classList.remove('hidden');
+      setRunning(false);
+      return;
+    }
     currentJobId = res.jobId;
     openStream(res.jobId);
   } catch (e) {

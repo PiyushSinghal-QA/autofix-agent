@@ -118,6 +118,11 @@ export class AnalysisService {
     this.logger.log('E2E ledger cleared.');
   }
 
+  /** Most recent pushed run that exercised the given branch (newest-first history). */
+  latestReportForBranch(branch: string): AnalysisReport | null {
+    return this.history.find((r) => r.branch === branch) ?? null;
+  }
+
   /** Distinct bugs found across every pushed run, with first/last seen + run count. */
   issuesToDate(): IssueSummary[] {
     const map = new Map<string, IssueSummary>();
