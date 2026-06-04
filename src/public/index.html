@@ -25,6 +25,7 @@
         <div class="health-meta">
           <div class="health-title" id="healthRepo">checkout-service</div>
           <div class="health-sub" id="healthSub">loading health…</div>
+          <div class="health-note">Seeded defect catalogue — every known bug branch (independent of test runs)</div>
         </div>
       </div>
       <div class="health-stats" id="healthStats"></div>
@@ -40,7 +41,7 @@
       <div class="report-head">
         <span class="report-icon" aria-hidden="true">⇩</span>
         <div>
-          <div class="report-title">Latest run</div>
+          <div class="report-title">Latest test run <span class="report-src">· pushed by checkout-e2e</span></div>
           <div class="report-sub" id="reportSub">—</div>
         </div>
       </div>
@@ -53,7 +54,7 @@
         <div class="panel-head">
           <h2>Issues found to date</h2>
           <div class="toggles">
-            <button id="clearIssues" class="link-btn" title="Reset the framework-findings ledger (Latest run + Issues found to date)">Clear</button>
+            <button id="clearIssues" class="link-btn" title="Reset the framework-findings ledger (Latest test run + Issues found to date)">Clear</button>
             <label class="toggle" title="Make the AI attempt a test-editing fix, to demo the safety guard">
               <input type="checkbox" id="rogueToggle" /> <span>rogue</span>
             </label>
@@ -64,8 +65,8 @@
         </div>
         <div id="bugList" class="bug-list"><div class="loading">Loading bugs…</div></div>
 
-        <div class="panel-head sub"><h2>Recent runs</h2></div>
-        <div id="history" class="history"><div class="muted">No runs yet.</div></div>
+        <div class="panel-head sub"><h2>Recent AutoFix jobs</h2></div>
+        <div id="history" class="history"><div class="muted">No AutoFix jobs yet — hit “Trigger AutoFix” on an issue.</div></div>
       </section>
 
       <!-- Right: live pipeline -->

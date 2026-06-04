@@ -182,7 +182,7 @@ async function loadHistory() {
   const box = $('#history');
   try {
     const jobs = await (await fetch('./api/jobs')).json();
-    if (!jobs.length) { box.innerHTML = '<div class="muted">No runs yet.</div>'; return; }
+    if (!jobs.length) { box.innerHTML = '<div class="muted">No AutoFix jobs yet — hit “Trigger AutoFix” on an issue.</div>'; return; }
     box.innerHTML = '';
     for (const j of jobs.slice(0, 8)) {
       const row = el('div', 'run-row');
