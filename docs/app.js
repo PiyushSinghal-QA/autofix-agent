@@ -51,7 +51,8 @@ const fetchRuns = () => gh(`/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW
 
 /** Classify a bug's fix status from the PRs that target its branch. */
 function fixStatus(bug, prs) {
-  const mine = prs.filter((p) => p.base?.ref === bug.branch || (p.head?.ref || '').startsWith(`fix/${bug.id}-`));
+  // Fixes branch off main now, so identify a bug's PRs by their fix/<id>- head.
+  const mine = prs.filter((p) => (p.head?.ref || '').startsWith(`fix/${bug.id}-`));
   if (mine.some((p) => p.merged_at)) {
     const pr = mine.find((p) => p.merged_at);
     return { cls: 'merged', label: `Fix merged · #${pr.number}`, url: pr.html_url };
@@ -86,7 +87,7 @@ function renderBugs(bugs, prs) {
         <div class="bug-desc">${esc(b.description)}</div>
         <div class="bug-meta">
           <span class="tag">${esc(b.category)}</span>
-          <span class="tag">branch <b>${esc(b.branch)}</b></span>
+          <span class="tag">file <b>${esc((b.files && b.files[0]) || '—')}</b></span>
           <span class="tag">test <b>${esc(b.failingTest)}</b></span>
         </div>
       </div>`;

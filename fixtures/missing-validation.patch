@@ -1,5 +1,5 @@
 diff --git a/src/app.module.ts b/src/app.module.ts
-index b43b0d0..4a8d9e5 100644
+index b43b0d0..695fcc4 100644
 --- a/src/app.module.ts
 +++ b/src/app.module.ts
 @@ -1,4 +1,5 @@
@@ -9,12 +9,11 @@ index b43b0d0..4a8d9e5 100644
  import { HealthModule } from './health/health.module';
  import { CartModule } from './cart/cart.module';
  import { CheckoutModule } from './checkout/checkout.module';
-@@ -6,5 +7,16 @@ import { ProductsModule } from './products/products.module';
+@@ -6,5 +7,15 @@ import { ProductsModule } from './products/products.module';
  
  @Module({
    imports: [HealthModule, CartModule, CheckoutModule, ProductsModule],
 +  providers: [
-+    // Global input-validation guard. Bug branch `bug/missing-validation` removes it.
 +    {
 +      provide: APP_PIPE,
 +      useValue: new ValidationPipe({

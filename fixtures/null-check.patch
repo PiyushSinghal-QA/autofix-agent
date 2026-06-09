@@ -1,15 +1,20 @@
 diff --git a/src/checkout/checkout.service.ts b/src/checkout/checkout.service.ts
-index 025a57f..6f6ed65 100644
+index 7d1efe0..9a7d01d 100644
 --- a/src/checkout/checkout.service.ts
 +++ b/src/checkout/checkout.service.ts
-@@ -14,9 +14,12 @@ export class CheckoutService {
+@@ -1,4 +1,4 @@
+-import { BadRequestException, Injectable } from '@nestjs/common';
++import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+ import { CartService } from '../cart/cart.service';
+ import { PricingService } from '../pricing/pricing.service';
+ import { PaymentGateway } from '../payment/payment.gateway';
+@@ -14,7 +14,11 @@ export class CheckoutService {
    ) {}
  
    async checkout(dto: CheckoutDto) {
 -    const cart = this.carts.find(dto.cartId)!;
 +    const cart = this.carts.find(dto.cartId);
- 
-     // [bug/null-check] removes this guard → `cart.items` below throws → 500.
++
 +    if (!cart) {
 +      throw new NotFoundException(`Cart ${dto.cartId} not found`);
 +    }

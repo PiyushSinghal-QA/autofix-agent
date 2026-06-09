@@ -175,7 +175,7 @@ export class PipelineService {
 
       // 5) VALIDATE ─────────────────────────────────────────────────────────
       this.emit(jobId, 'validating', 'start', 'Running test → lint → build against the patched code');
-      const validation = await this.validation.validate(worktree.path, (step) =>
+      const validation = await this.validation.validate(worktree.path, bug, (step) =>
         this.emit(
           jobId,
           'validating',

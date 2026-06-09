@@ -1,11 +1,11 @@
 diff --git a/src/checkout/checkout.service.ts b/src/checkout/checkout.service.ts
-index 3a9776b..6f6ed65 100644
+index 7d1efe0..0a32a4f 100644
 --- a/src/checkout/checkout.service.ts
 +++ b/src/checkout/checkout.service.ts
-@@ -31,7 +31,12 @@ export class CheckoutService {
+@@ -25,7 +25,12 @@ export class CheckoutService {
+       dto.couponCode,
      );
  
-     // [bug/unhandled-error] removes this try/catch → a decline becomes a 500.
 -    const receipt = await this.payment.charge({ amount: total, customer: dto.customer });
 +    let receipt;
 +    try {

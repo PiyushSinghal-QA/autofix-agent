@@ -15,37 +15,38 @@
           <p class="tagline">bug&nbsp;→&nbsp;Trello&nbsp;card&nbsp;→&nbsp;AI&nbsp;fix&nbsp;→&nbsp;GitHub&nbsp;PR</p>
         </div>
       </div>
-      <div class="chips" id="configChips"></div>
-    </header>
-
-    <!-- Health overview -->
-    <section class="health" id="health">
-      <div class="health-main">
-        <div class="health-badge" id="healthBadge">—</div>
-        <div class="health-meta">
-          <div class="health-title" id="healthRepo">checkout-service</div>
-          <div class="health-sub" id="healthSub">loading health…</div>
-          <div class="health-note">Seeded defect catalogue — every known bug branch (independent of test runs)</div>
+      <div class="topbar-right">
+        <div class="chips" id="configChips"></div>
+        <div class="settings">
+          <label class="toggle" title="Make the AI attempt a test-editing fix, to demo the safety guard">
+            <input type="checkbox" id="rogueToggle" /> <span>rogue</span>
+          </label>
+          <label class="toggle" title="Skip the review step and open the PR automatically">
+            <input type="checkbox" id="autoApprove" /> <span>auto-approve</span>
+          </label>
         </div>
       </div>
-      <div class="health-stats" id="healthStats"></div>
+    </header>
+
+    <!-- Unified status: live state of main + latest test run -->
+    <section class="statusbar">
+      <div class="sb-main">
+        <div class="health-badge" id="healthBadge">—</div>
+        <div class="sb-meta">
+          <div class="health-title" id="healthRepo">checkout-service</div>
+          <div class="health-sub" id="healthSub">loading health…</div>
+          <div class="health-note">Seeded defects live on <code>main</code> — the bugs users hit in production</div>
+        </div>
+      </div>
       <div class="health-sev" id="healthSev"></div>
-      <div class="health-baseline">
+      <div class="sb-run">
+        <div class="sb-run-head">Latest test run <span class="sb-src">checkout-e2e</span></div>
+        <div class="report-sub" id="reportSub">no runs yet</div>
+      </div>
+      <div class="sb-baseline">
         <button id="scanBtn" class="ghost-btn">Run baseline check</button>
         <div class="baseline-result" id="baselineResult"></div>
       </div>
-    </section>
-
-    <!-- Latest results pushed by the checkout-e2e framework -->
-    <section class="report-strip hidden" id="reportStrip">
-      <div class="report-head">
-        <span class="report-icon" aria-hidden="true">⇩</span>
-        <div>
-          <div class="report-title">Latest test run <span class="report-src">· pushed by checkout-e2e</span></div>
-          <div class="report-sub" id="reportSub">—</div>
-        </div>
-      </div>
-      <div class="report-bugs" id="reportBugs"></div>
     </section>
 
     <main class="layout">
@@ -53,15 +54,7 @@
       <section class="panel">
         <div class="panel-head">
           <h2>Issues found to date</h2>
-          <div class="toggles">
-            <button id="clearIssues" class="link-btn" title="Reset the framework-findings ledger (Latest test run + Issues found to date)">Clear</button>
-            <label class="toggle" title="Make the AI attempt a test-editing fix, to demo the safety guard">
-              <input type="checkbox" id="rogueToggle" /> <span>rogue</span>
-            </label>
-            <label class="toggle" title="Skip the review step and open the PR automatically">
-              <input type="checkbox" id="autoApprove" /> <span>auto-approve</span>
-            </label>
-          </div>
+          <button id="clearIssues" class="link-btn" title="Reset the framework-findings ledger (Latest test run + Issues found to date)">Clear</button>
         </div>
         <div id="bugList" class="bug-list"><div class="loading">Loading bugs…</div></div>
 

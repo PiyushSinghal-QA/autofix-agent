@@ -41,14 +41,11 @@ async function init() {
 async function loadReport() {
   try {
     const r = await (await fetch('./api/report')).json();
-    const strip = $('#reportStrip');
-    if (!r) { strip.classList.add('hidden'); return; }
-    strip.classList.remove('hidden');
-    const when = new Date(r.receivedAt).toLocaleTimeString();
-    $('#reportSub').textContent = `branch ${r.branch} · ${r.passed}/${r.totalTests} passed · ${r.failed} failing · ${when}`;
-    $('#reportBugs').innerHTML = r.detected && r.detected.length
-      ? r.detected.map((d) => `<span class="report-bug ${esc(d.severity)}">${esc(d.bugId)}<small>${esc(d.failingTest)}</small></span>`).join('')
-      : (r.failed ? `<span class="muted">${(r.unmapped || []).length} failing test(s), none mapped to a known bug</span>` : `<span class="muted">all green — nothing to fix</span>`);
+    const node = $('#reportSub');
+    if (!node) return;
+    node.textContent = r
+      ? `${r.branch} · ${r.passed}/${r.totalTests} passed · ${r.failed} failing · ${new Date(r.receivedAt).toLocaleTimeString()}`
+      : 'no runs yet';
   } catch { /* no report yet */ }
 }
 
@@ -136,14 +133,11 @@ function renderHealth(h) {
   $('#healthRepo').textContent = h.repository;
   $('#healthSub').textContent =
     `${h.open + h.inProgress} open · ${h.proposed} in review · ${h.prOpen} PR open · ${h.resolved} resolved`;
-  $('#healthStats').innerHTML =
-    hstat(h.open + h.inProgress, 'open') + hstat(h.prOpen, 'PR open') + hstat(h.resolved, 'resolved');
   $('#healthSev').innerHTML =
     sevchip('high', h.bySeverity.high) + sevchip('medium', h.bySeverity.medium) + sevchip('low', h.bySeverity.low);
   if (h.baseline) renderBaseline(h.baseline);
 }
 
-const hstat = (n, l) => `<div class="hstat"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`;
 const sevchip = (sev, n) => `<span class="sevchip">${esc(sev)} <b>${esc(n)}</b></span>`;
 
 function applyBugStatus(b) {
