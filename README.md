@@ -44,6 +44,28 @@ its own bug catalogue (`bugs/registry.json`) and canned fixes (`bugs/fixtures/`)
 that power the offline `mock` provider — a real target needs **neither**: it uses
 `AI_PROVIDER=claude` and live test results.
 
+### Per-target commands (`autofix.config.json`)
+
+*How* to install, run and test the target lives in an optional
+`autofix.config.json` at the target app's root, so the agent stays
+language-agnostic. Absent (the Node demo) → Node/Playwright defaults. A
+PHP/Symfony target ships, for example:
+
+```json
+{
+  "install": "composer install --no-interaction --no-progress",
+  "build": "",
+  "serve": "php -S 127.0.0.1:${PORT} -t public",
+  "healthPath": "/health",
+  "startTimeoutMs": 60000,
+  "test": "npx playwright test --reporter=json"
+}
+```
+
+`${PORT}` is substituted with `APP_PORT` (and set in the env). For a
+container-based app use `"serve": "docker compose up -d"` + `"stop": "docker compose down -v"`.
+The test command runs in `E2E_PATH` and must emit Playwright JSON.
+
 ## Run it (against the demo target)
 
 ```bash

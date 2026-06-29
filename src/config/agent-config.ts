@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
+import { TargetCommands, loadTargetCommands } from './target-commands';
 
 export type AiProviderName = 'mock' | 'claude';
 
@@ -25,6 +26,7 @@ export class AgentConfig {
   readonly appPort: number;
   readonly worktreeRoot: string;
   readonly appBinPath: string;
+  readonly target: TargetCommands;
   readonly commitAuthorName: string;
   readonly commitAuthorEmail: string;
 
@@ -44,6 +46,9 @@ export class AgentConfig {
     this.appPort = env.APP_PORT ? Number(env.APP_PORT) : 3100;
     this.worktreeRoot = join(this.appPath, '.agent-worktrees');
     this.appBinPath = join(this.appPath, 'node_modules', '.bin');
+    // How to install/build/serve/test the target — defaults to Node/Playwright,
+    // overridden by an autofix.config.json the target ships (e.g. a PHP app).
+    this.target = loadTargetCommands(this.appPath);
     // The agent owns its commit identity so fixes are attributable and commits
     // never fail on environments without an ambient git user (e.g. CI runners).
     this.commitAuthorName = env.GIT_AUTHOR_NAME || 'AutoFix Agent';

@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, ChildProcess } from 'node:child_process';
 import { delimiter } from 'node:path';
 
 export interface CommandResult {
@@ -27,39 +27,15 @@ function envWithPath(extra: string[] = [], overrides: NodeJS.ProcessEnv = {}): N
   return env;
 }
 
-/**
- * Spawns a command and fully captures stdout/stderr. Never rejects — failures
- * are reported via `ok`/`exitCode` so callers can branch instead of try/catch.
- */
-export function runCommand(command: string, args: string[], cwd: string, opts: RunOptions = {}): Promise<CommandResult> {
+/** Capture stdout/stderr of a spawned child. Never rejects — failures surface via `ok`. */
+function capture(child: ChildProcess, start: number, timeoutMs?: number): Promise<CommandResult> {
   return new Promise((resolve) => {
-    const start = Date.now();
     let stdout = '';
     let stderr = '';
     let combined = '';
-
-    // On Windows npm/npx/nest are .cmd shims that need a shell. Fold args into a
-    // single command string (instead of passing an args array with shell:true)
-    // to avoid Node's "args with shell" deprecation warning.
-    const env = envWithPath(opts.prependPath, opts.env);
-    const onWindows = process.platform === 'win32';
-    const quote = (a: string) => (/\s/.test(a) ? `"${a}"` : a);
-    const child = onWindows
-      ? spawn([command, ...args.map(quote)].join(' '), [], { cwd, env, shell: true })
-      : spawn(command, args, { cwd, env, shell: false });
-
-    const timer = opts.timeoutMs ? setTimeout(() => child.kill('SIGKILL'), opts.timeoutMs) : null;
-
-    child.stdout?.on('data', (d) => {
-      const s = d.toString();
-      stdout += s;
-      combined += s;
-    });
-    child.stderr?.on('data', (d) => {
-      const s = d.toString();
-      stderr += s;
-      combined += s;
-    });
+    const timer = timeoutMs ? setTimeout(() => child.kill('SIGKILL'), timeoutMs) : null;
+    child.stdout?.on('data', (d) => { const s = d.toString(); stdout += s; combined += s; });
+    child.stderr?.on('data', (d) => { const s = d.toString(); stderr += s; combined += s; });
     child.on('close', (code) => {
       if (timer) clearTimeout(timer);
       resolve({ ok: code === 0, exitCode: code, stdout, stderr, combined, durationMs: Date.now() - start });
@@ -70,4 +46,32 @@ export function runCommand(command: string, args: string[], cwd: string, opts: R
       resolve({ ok: false, exitCode: null, stdout, stderr: stderr + msg, combined: combined + msg, durationMs: Date.now() - start });
     });
   });
+}
+
+/**
+ * Spawns a command + args. On Windows npm/npx/nest are .cmd shims that need a
+ * shell, so args are folded into a single string (avoids Node's "args with
+ * shell" deprecation warning).
+ */
+export function runCommand(command: string, args: string[], cwd: string, opts: RunOptions = {}): Promise<CommandResult> {
+  const start = Date.now();
+  const env = envWithPath(opts.prependPath, opts.env);
+  const onWindows = process.platform === 'win32';
+  const quote = (a: string) => (/\s/.test(a) ? `"${a}"` : a);
+  const child = onWindows
+    ? spawn([command, ...args.map(quote)].join(' '), [], { cwd, env, shell: true })
+    : spawn(command, args, { cwd, env, shell: false });
+  return capture(child, start, opts.timeoutMs);
+}
+
+/**
+ * Runs an arbitrary command LINE through the platform shell (cmd on Windows,
+ * /bin/sh elsewhere). Lets a target declare its commands as strings — e.g.
+ * "composer install" or "php -S 127.0.0.1:3100 -t public".
+ */
+export function runShell(commandLine: string, cwd: string, opts: RunOptions = {}): Promise<CommandResult> {
+  const start = Date.now();
+  const env = envWithPath(opts.prependPath, opts.env);
+  const child = spawn(commandLine, [], { cwd, env, shell: true });
+  return capture(child, start, opts.timeoutMs);
 }
