@@ -10,8 +10,7 @@
     "lint": "eslint \"src/**/*.ts\"",
     "demo": "npm run build && npm run start",
     "pipeline": "ts-node src/cli/run-pipeline.ts",
-    "detect": "ts-node src/cli/detect.ts",
-    "seed:fixtures": "node scripts/seed-fixtures.mjs"
+    "detect": "ts-node src/cli/detect.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",

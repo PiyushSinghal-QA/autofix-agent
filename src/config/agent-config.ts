@@ -5,11 +5,12 @@ import { resolve, join } from 'node:path';
 export type AiProviderName = 'mock' | 'claude';
 
 /**
- * Typed view over the environment. The agent operates across three repos:
- *   - appPath  : checkout-service (the target it fixes)
- *   - e2ePath  : checkout-e2e (the black-box suite it runs to detect/validate)
- *   - agentRoot: this repo (for the mock provider's fix fixtures)
- * Safe offline defaults; real tokens only matter when DRY_RUN=false / claude.
+ * Typed view over the environment. The agent is target-agnostic — point it at
+ * any app + test suite + GitHub repo via env:
+ *   - appPath  : the target app the agent fixes     (APP_PATH)
+ *   - e2ePath  : the target's black-box test suite   (E2E_PATH)
+ *   - agentRoot: this repo (the tool itself)
+ * The sample checkout-service/checkout-e2e are just one example target.
  */
 @Injectable()
 export class AgentConfig {
@@ -38,8 +39,8 @@ export class AgentConfig {
     this.dryRun = env.DRY_RUN !== 'false';
     this.port = env.PORT ? Number(env.PORT) : 4000;
     this.agentRoot = resolve(__dirname, '..', '..');
-    this.appPath = this.resolveDir(env.APP_PATH, '../checkout-service', 'package.json');
-    this.e2ePath = this.resolveDir(env.E2E_PATH, '../checkout-e2e', 'playwright.config.ts');
+    this.appPath = this.resolveDir(env.APP_PATH, '../target-app', 'package.json');
+    this.e2ePath = this.resolveDir(env.E2E_PATH, '../target-tests', 'playwright.config.ts');
     this.appPort = env.APP_PORT ? Number(env.APP_PORT) : 3100;
     this.worktreeRoot = join(this.appPath, '.agent-worktrees');
     this.appBinPath = join(this.appPath, 'node_modules', '.bin');
@@ -59,8 +60,8 @@ export class AgentConfig {
     };
     this.github = {
       token: env.GITHUB_TOKEN || undefined,
-      owner: env.GITHUB_OWNER || 'PiyushSinghal-QA',
-      repo: env.GITHUB_REPO || 'checkout-service',
+      owner: env.GITHUB_OWNER || '',
+      repo: env.GITHUB_REPO || '',
       defaultReviewer: env.GITHUB_DEFAULT_REVIEWER || undefined,
     };
   }

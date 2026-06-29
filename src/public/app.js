@@ -43,6 +43,8 @@ async function loadReport() {
     const r = await (await fetch('./api/report')).json();
     const node = $('#reportSub');
     if (!node) return;
+    const suite = $('#reportSuite');
+    if (suite && r && r.suite) suite.textContent = r.suite;
     node.textContent = r
       ? `${r.branch} · ${r.passed}/${r.totalTests} passed · ${r.failed} failing · ${new Date(r.receivedAt).toLocaleTimeString()}`
       : 'no runs yet';
@@ -79,7 +81,7 @@ async function loadIssues() {
     const issues = await (await fetch('./api/issues')).json();
     for (const k of Object.keys(bugCards)) delete bugCards[k];
     if (!Array.isArray(issues) || !issues.length) {
-      list.innerHTML = '<div class="muted">No issues found yet — run <code>checkout-e2e</code> and it will push results here.</div>';
+      list.innerHTML = '<div class="muted">No issues found yet — run your test suite and it will push results here.</div>';
       return;
     }
     list.innerHTML = '';

@@ -16,7 +16,7 @@ const ROOT_CAUSE: Record<string, string> = {
 
 /**
  * Offline, deterministic "AI". Returns the canonical fix patch for each seeded
- * bug (stored as fixtures in this repo) while simulating realistic latency, a
+ * bug (read from the target app's bugs/fixtures/) while simulating realistic latency, a
  * streamed reasoning trace, and token accounting — zero cost.
  */
 @Injectable()
@@ -26,7 +26,9 @@ export class MockAIProvider implements AIProvider {
   private readonly fixturesDir: string;
 
   constructor(private readonly config: AgentConfig) {
-    this.fixturesDir = join(config.agentRoot, 'fixtures');
+    // Fixtures are shipped by the TARGET app (demo), not the agent — the tool
+    // stays free of sample-specific data. Real targets use AI_PROVIDER=claude.
+    this.fixturesDir = join(config.appPath, 'bugs', 'fixtures');
   }
 
   async generateFix(request: FixRequest): Promise<FixResponse> {
@@ -75,7 +77,7 @@ export class MockAIProvider implements AIProvider {
   private loadFixture(bugId: string): string {
     const file = join(this.fixturesDir, `${bugId}.patch`);
     if (!existsSync(file)) {
-      throw new Error(`Missing fix fixture for "${bugId}" at ${file}. Run: npm run seed:fixtures`);
+      throw new Error(`Missing fix fixture for "${bugId}" at ${file}. The mock provider replays canned fixes the demo target ships under bugs/fixtures/; real targets use AI_PROVIDER=claude.`);
     }
     return readFileSync(file, 'utf8');
   }

@@ -3,6 +3,7 @@
  * Pulls everything from the public GitHub REST API, client-side. No backend,
  * no token: this is a static page on GitHub Pages that reflects the real repo.
  */
+// Deployment config — set these to your GitHub org + repo when deploying.
 const OWNER = 'PiyushSinghal-QA';
 const REPO = 'checkout-service';
 const WORKFLOW = 'autofix.yml';
